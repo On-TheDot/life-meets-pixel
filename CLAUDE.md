@@ -24,7 +24,7 @@ Any decision, convention, performance finding, or gotcha discovered during a ses
 
 - **All GROQ lives in `lib/content/queries.ts`.** Don't inline GROQ in components/pages (sitemap + one-off scripts excepted).
 - **`components/retro/review-card.tsx` renders all 8 item types.** Don't fork per-type cards: extend `lib/content/mappings.ts` + `components/retro/sprites.tsx`.
-- **`/api/revalidate` is gated on `REVALIDATE_SECRET`.** If you add a Sanity `_type` that renders on the site, add it to `RENDERED_TYPES` in `app/api/revalidate/route.ts`, or its edits only refresh the homepage until the 1h fetch window lapses.
+- **`/api/revalidate` is gated on `REVALIDATE_SECRET`.** If you add a Sanity `_type` that renders on the site, add it to `RENDERED_TYPES` in `app/api/revalidate/route.ts`, or its edits only refresh the homepage until the 30-day `cacheLife("max")` window lapses.
 - **Every affiliate surface links to `/legal/affiliate-disclosure`.** FTC + ACL requirement.
 - **Studio (`studio/`) is React 18 + Sanity 3.99.** Frontend is React 19. Don't try to unify.
 - **The webhook expires everything, on purpose.** A published mutation calls `revalidatePath("/", "layout")` plus `revalidateTag` for every tag in `lib/content/cache-tags.ts`. Never add per-page typed calls like `revalidatePath("/reviews", "page")`: a typed path has to include route groups (`/(site)/reviews/(listing)`), and a path without them silently matches nothing.

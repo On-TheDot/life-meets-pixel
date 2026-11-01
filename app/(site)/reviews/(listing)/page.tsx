@@ -20,7 +20,7 @@ import {
   itemTypeToCat,
 } from "@/lib/content/mappings";
 import {
-  fetchOptions,
+  cachedFetch,
   REVIEW_COUNTS_BY_TYPE_QUERY,
   REVIEWS_BY_TYPE_PAGINATED_BY_SCORE_QUERY,
   REVIEWS_BY_TYPE_PAGINATED_QUERY,
@@ -30,7 +30,6 @@ import {
   REVIEWS_PAGINATED_QUERY,
 } from "@/lib/content/queries";
 import type { Review, ReviewableItem } from "@/lib/content/types";
-import { client } from "@/sanity/client";
 
 /**
  * This route is intentionally request-bound, and needs BOTH declarations:
@@ -180,12 +179,12 @@ async function ReviewsList({
 
   const [reviews, totalCount] = type
     ? await Promise.all([
-        client.fetch<Review[]>(listQuery, { itemType: type, start, end }, fetchOptions),
-        client.fetch<number>(REVIEWS_COUNT_BY_TYPE_QUERY, { itemType: type }, fetchOptions),
+        cachedFetch<Review[]>(listQuery, { itemType: type, start, end }),
+        cachedFetch<number>(REVIEWS_COUNT_BY_TYPE_QUERY, { itemType: type }),
       ])
     : await Promise.all([
-        client.fetch<Review[]>(listQuery, { start, end }, fetchOptions),
-        client.fetch<number>(REVIEWS_COUNT_QUERY, {}, fetchOptions),
+        cachedFetch<Review[]>(listQuery, { start, end }),
+        cachedFetch<number>(REVIEWS_COUNT_QUERY),
       ]);
 
   const totalPages = Math.max(1, Math.ceil(totalCount / ITEMS_PER_PAGE));
@@ -234,11 +233,7 @@ export default async function ReviewsPage({ searchParams }: ReviewsPageProps) {
   const currentPage = Math.max(1, Number(params.page) || 1);
   const sort: Sort = params.sort === "score" ? "score" : "new";
 
-  const counts = await client.fetch<CountsShape>(
-    REVIEW_COUNTS_BY_TYPE_QUERY,
-    {},
-    fetchOptions,
-  );
+  const counts = await cachedFetch<CountsShape>(REVIEW_COUNTS_BY_TYPE_QUERY);
 
   const pageTitle = type ? `${CAT_TYPE_HEADING[type]} Reviews` : "All Reviews";
   const entryCount = type ? (counts[type] ?? 0) : (counts.all ?? 0);

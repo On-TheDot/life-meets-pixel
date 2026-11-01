@@ -2,9 +2,8 @@ import Link from "next/link";
 
 import { MarqueeWords, SmilingCloud, SmilingHill } from "@/components/retro/arcade-art";
 import { NewsCard } from "@/components/retro/news-card";
-import { NEWS_QUERY, fetchOptions } from "@/lib/content/queries";
+import { NEWS_QUERY, cachedFetch } from "@/lib/content/queries";
 import type { NewsPost } from "@/lib/content/types";
-import { client } from "@/sanity/client";
 
 /** Winding route across the hills, in the 1440x520 scenery viewBox. */
 const ROAD_PATH = "M-20 470 C160 450 250 380 420 390 S720 330 900 300 S1180 190 1460 150";
@@ -30,7 +29,7 @@ function HillsScenery() {
 }
 
 export default async function NewsSection() {
-  const posts = await client.fetch<NewsPost[]>(NEWS_QUERY, {}, fetchOptions);
+  const posts = await cachedFetch<NewsPost[]>(NEWS_QUERY);
   const items = posts.slice(0, 3);
 
   if (items.length === 0) {

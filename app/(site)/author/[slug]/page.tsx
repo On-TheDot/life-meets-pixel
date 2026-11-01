@@ -12,7 +12,7 @@ import { SiteHeader } from "@/components/site-header";
 import { OG_IMAGE } from "@/lib/site/constants";
 import { authorInitial } from "@/lib/content/mappings";
 import { breadcrumbSchema, graph, profilePageSchema } from "@/lib/content/schema";
-import { AUTHOR_SLUGS_QUERY, fetchOptions, HIDDEN_AUTHOR_IDS } from "@/lib/content/queries";
+import { AUTHOR_SLUGS_QUERY, cachedFetch, HIDDEN_AUTHOR_IDS } from "@/lib/content/queries";
 import type { Author, NewsPost, Review } from "@/lib/content/types";
 import { client } from "@/sanity/client";
 
@@ -82,7 +82,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lifemeetspixel.com";
-  const author = await client.fetch<Author>(AUTHOR_BY_SLUG_QUERY, { slug }, fetchOptions);
+  const author = await cachedFetch<Author>(AUTHOR_BY_SLUG_QUERY, { slug });
   if (!author) return { title: "Author Not Found" };
   const canonicalUrl = `${siteUrl}/author/${slug}`;
   return {
@@ -106,10 +106,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 // the Suspense boundary in AuthorPage, not here. See the note there.
 async function AuthorContent({ author }: { author: Author }) {
   const [reviews, newsPosts, reviewCount, newsCount] = await Promise.all([
-    client.fetch<Review[]>(AUTHOR_REVIEWS_QUERY, { authorId: author._id }, fetchOptions),
-    client.fetch<NewsPost[]>(AUTHOR_NEWS_QUERY, { authorId: author._id }, fetchOptions),
-    client.fetch<number>(`count(*[_type == "review" && author._ref == $authorId])`, { authorId: author._id }, fetchOptions),
-    client.fetch<number>(`count(*[_type == "newsPost" && author._ref == $authorId])`, { authorId: author._id }, fetchOptions),
+    cachedFetch<Review[]>(AUTHOR_REVIEWS_QUERY, { authorId: author._id }),
+    cachedFetch<NewsPost[]>(AUTHOR_NEWS_QUERY, { authorId: author._id }),
+    cachedFetch<number>(`count(*[_type == "review" && author._ref == $authorId])`, { authorId: author._id }),
+    cachedFetch<number>(`count(*[_type == "newsPost" && author._ref == $authorId])`, { authorId: author._id }),
   ]);
 
   const accent = author.accentColor || "var(--neon-2)";
@@ -271,7 +271,7 @@ export default async function AuthorPage({ params }: Props) {
   // the 200 status is committed and a later notFound() can no longer change it,
   // which turned every bogus /author/* URL into a soft 404. The Suspense
   // boundary stays for the slow secondary fetches, which cannot 404.
-  const author = await client.fetch<Author>(AUTHOR_BY_SLUG_QUERY, { slug }, fetchOptions);
+  const author = await cachedFetch<Author>(AUTHOR_BY_SLUG_QUERY, { slug });
   if (!author || HIDDEN_AUTHOR_IDS.includes(author._id)) notFound();
 
   return (

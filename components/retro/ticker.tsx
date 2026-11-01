@@ -1,5 +1,4 @@
-import { TICKER_QUERY, fetchOptions } from "@/lib/content/queries";
-import { client } from "@/sanity/client";
+import { TICKER_QUERY, cachedFetch } from "@/lib/content/queries";
 
 import { TickerBar, type TickerItem } from "./ticker-bar";
 
@@ -13,7 +12,7 @@ type TickerReview = {
 export async function Ticker() {
   let items: TickerItem[] = [];
   try {
-    const recent = await client.fetch<TickerReview[]>(TICKER_QUERY, {}, fetchOptions);
+    const recent = await cachedFetch<TickerReview[]>(TICKER_QUERY);
     items = recent
       .filter((r) => r.slug)
       .map((r) => ({

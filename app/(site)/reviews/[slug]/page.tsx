@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { relativeFromNow } from "@/lib/site/clock";
 import { PortableText, type PortableTextComponents } from "next-sanity";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +9,7 @@ import Comments from "@/components/comments/comments";
 import { AuthorChip } from "@/components/retro/author-chip";
 import { CatBadge } from "@/components/retro/cat-badge";
 import { HeartRow } from "@/components/retro/heart-row";
+import { RelativeDate } from "@/components/retro/relative-date";
 import { HPBar } from "@/components/retro/hp-bar";
 import { ReviewCard } from "@/components/retro/review-card";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -26,7 +26,7 @@ import {
   scoreTone,
 } from "@/lib/content/mappings";
 import {
-  fetchOptions,
+  cachedFetch,
   ADJACENT_REVIEWS_QUERY,
   RELATED_REVIEWS_QUERY,
   REVIEW_QUERY,
@@ -56,7 +56,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
-  const review = await client.fetch<Review>(REVIEW_QUERY, await params, fetchOptions);
+  const review = await cachedFetch<Review>(REVIEW_QUERY, await params);
   if (!review) {
     return { title: "Review Not Found", description: "The requested review could not be found." };
   }
@@ -267,7 +267,7 @@ const getPublisherLabel = (itemType: string): string => {
 
 export default async function ReviewPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const review = await client.fetch<Review>(REVIEW_QUERY, resolvedParams, fetchOptions);
+  const review = await cachedFetch<Review>(REVIEW_QUERY, resolvedParams);
 
   if (!review) notFound();
 
@@ -275,16 +275,13 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
   // meant "MORE LIKE THIS" could only ever return the same medium — the one
   // movement the browsing reader is worth designing for.
   const [related, adjacent] = await Promise.all([
-    client.fetch<Review[]>(
+    cachedFetch<Review[]>(
       RELATED_REVIEWS_QUERY,
       { itemType: review.reviewableItem?.itemType, slug: resolvedParams.slug },
-      fetchOptions,
     ),
-    client
-      .fetch<Review[]>(
+    cachedFetch<Review[]>(
         ADJACENT_REVIEWS_QUERY,
         { itemType: review.reviewableItem?.itemType, slug: resolvedParams.slug },
-        fetchOptions,
       )
       .catch(() => [] as Review[]),
   ]);
@@ -303,7 +300,6 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
     Array.isArray(review.scoreBreakdown) && review.scoreBreakdown.length > 0;
   const toneColor =
     tone === "low" ? "var(--heart)" : tone === "mid" ? "var(--neon-4)" : "var(--neon-3)";
-  const relativeDate = await relativeFromNow(review.publishedAt);
   const itemImageUrl = item?.coverImage?.asset?.url ?? null;
 
   const structuredData = graph(
@@ -409,7 +405,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                 <time
                   dateTime={review.publishedAt}
                 >
-                  {relativeDate}
+                  <RelativeDate iso={review.publishedAt} />
                 </time>
               </div>
               {review.tags && review.tags.length > 0 && (

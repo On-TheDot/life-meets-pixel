@@ -57,10 +57,10 @@ export async function POST(request: NextRequest) {
 
     if (RENDERED_TYPES.has(documentType)) {
       expireAllRoutes();
+      expire(...PUBLISH_TAGS);
     } else {
       revalidatePath("/");
     }
-    expire(...PUBLISH_TAGS);
 
     return NextResponse.json({
       revalidated: true,

@@ -26,7 +26,7 @@ type AuthorRow = { slug: { current: string }; _updatedAt: string };
 
 async function getContent() {
   "use cache";
-  cacheLife("hours");
+  cacheLife("max");
   cacheTag(...PUBLISH_TAGS);
   const [reviews, news, authors] = await Promise.all([
     client.fetch<SlugRow[]>(

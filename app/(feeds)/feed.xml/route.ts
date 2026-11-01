@@ -76,7 +76,7 @@ function cdata(s: string): string {
  */
 async function getFeedContent() {
   "use cache";
-  cacheLife("hours");
+  cacheLife("max");
   cacheTag(TAGS.reviews, TAGS.news, TAGS.feeds);
   const [reviews, news] = await Promise.all([
     client.fetch<FeedReview[]>(FEED_REVIEWS_QUERY),

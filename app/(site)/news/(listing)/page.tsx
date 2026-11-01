@@ -11,7 +11,7 @@ import Pagination from "@/components/ui/pagination";
 import { OG_IMAGE } from "@/lib/site/constants";
 import { breadcrumbSchema, collectionPageSchema, graph } from "@/lib/content/schema";
 import {
-  fetchOptions,
+  cachedFetch,
   NEWS_BY_CATEGORY_PAGINATED_QUERY,
   NEWS_CATEGORY_COUNTS_QUERY,
   NEWS_COUNT_BY_CATEGORY_QUERY,
@@ -19,7 +19,6 @@ import {
   NEWS_PAGINATED_QUERY,
 } from "@/lib/content/queries";
 import type { NewsPost } from "@/lib/content/types";
-import { client } from "@/sanity/client";
 
 /**
  * This route is intentionally request-bound, and needs BOTH declarations:
@@ -53,8 +52,7 @@ export async function generateMetadata({ searchParams }: NewsPageProps): Promise
   const params = await searchParams;
   const category = typeof params.category === "string" ? params.category : undefined;
 
-  const counts = await client
-    .fetch<CountsShape>(NEWS_CATEGORY_COUNTS_QUERY, {}, fetchOptions)
+  const counts = await cachedFetch<CountsShape>(NEWS_CATEGORY_COUNTS_QUERY)
     .catch(() => null);
   const match = counts?.categories.find((c) => c.slug === category);
 
@@ -100,16 +98,15 @@ async function NewsList({ category, page }: { category?: string; page: number })
 
   const [news, totalCount] = category
     ? await Promise.all([
-        client.fetch<NewsPost[]>(
+        cachedFetch<NewsPost[]>(
           NEWS_BY_CATEGORY_PAGINATED_QUERY,
           { category, start, end },
-          fetchOptions,
         ),
-        client.fetch<number>(NEWS_COUNT_BY_CATEGORY_QUERY, { category }, fetchOptions),
+        cachedFetch<number>(NEWS_COUNT_BY_CATEGORY_QUERY, { category }),
       ])
     : await Promise.all([
-        client.fetch<NewsPost[]>(NEWS_PAGINATED_QUERY, { start, end }, fetchOptions),
-        client.fetch<number>(NEWS_COUNT_QUERY, {}, fetchOptions),
+        cachedFetch<NewsPost[]>(NEWS_PAGINATED_QUERY, { start, end }),
+        cachedFetch<number>(NEWS_COUNT_QUERY),
       ]);
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -158,7 +155,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const params = await searchParams;
   const currentPage = Math.max(1, Number(params.page) || 1);
 
-  const counts = await client.fetch<CountsShape>(NEWS_CATEGORY_COUNTS_QUERY, {}, fetchOptions);
+  const counts = await cachedFetch<CountsShape>(NEWS_CATEGORY_COUNTS_QUERY);
 
   const requested = typeof params.category === "string" ? params.category : undefined;
   // Ignore an unknown ?category= rather than rendering an empty page for it.

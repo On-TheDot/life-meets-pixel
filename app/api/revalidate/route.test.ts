@@ -14,6 +14,7 @@ const NOT_RENDERED = new Set(["storyCandidate"]);
 
 const SCHEMA_DIR = join(__dirname, "../../../studio/schemaTypes");
 const APP_DIR = join(__dirname, "../..");
+const ROOT_DIR = join(APP_DIR, "..");
 
 /** Every `type: 'document'` declared in the Studio schema, by name. */
 function studioDocumentTypes(): string[] {
@@ -24,6 +25,15 @@ function studioDocumentTypes(): string[] {
       const m = source.match(/defineType\(\{\s*name:\s*['"](\w+)['"].*?type:\s*['"](\w+)['"]/);
       return m && m[2] === "document" ? [m[1]] : [];
     });
+}
+
+/** Every non-test TypeScript source file under `app`, `components` and `lib`. */
+function sourceFiles(): string[] {
+  return ["app", "components", "lib"].flatMap((dir) =>
+    readdirSync(join(ROOT_DIR, dir), { recursive: true, encoding: "utf8" })
+      .filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts"))
+      .map((f) => join(dir, f)),
+  );
 }
 
 async function loadRoute() {
@@ -76,11 +86,18 @@ describe("/api/revalidate", () => {
     },
   );
 
-  it("expires only the homepage and the tags for a type the site never renders", async () => {
+  it("expires only the homepage for a type the site never renders", async () => {
     const { POST } = await loadRoute();
     await POST(webhook({ _id: "abc", _type: "storyCandidate" }));
     expect(expiredEveryRoute()).toBe(false);
     expect(cache.revalidatePath).toHaveBeenCalledWith("/");
+    expect(cache.revalidateTag).not.toHaveBeenCalled();
+  });
+
+  it("keeps every cached lifetime at a day or longer", () => {
+    const shortLived = /cacheLife\(\s*["'](default|seconds|minutes|hours)["']|next:\s*\{\s*revalidate/;
+    const offenders = sourceFiles().filter((f) => shortLived.test(readFileSync(join(ROOT_DIR, f), "utf8")));
+    expect(offenders).toEqual([]);
   });
 
   it("ignores draft mutations, which the tokenless read client never sees", async () => {
