@@ -11,8 +11,9 @@ import { PUBLISH_TAGS } from '@/lib/content/cache-tags';
 const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET;
 
 /**
- * Sanity document types that render on the public site. A published mutation
- * to one of them expires every route; any other type expires the homepage.
+ * Sanity document types that render on the public site. A mutation to one of
+ * them, or a payload with no `_type`, expires every route and `PUBLISH_TAGS`.
+ * Any other type expires the homepage.
  */
 const RENDERED_TYPES = new Set([
   "review",
@@ -48,24 +49,25 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const documentType = body._type;
-    const slug = body.slug?.current;
+    const documentType = body?._type;
+    const label = typeof documentType === "string" ? documentType : "untyped document";
+    const slug = body?.slug?.current;
 
-    if (typeof body._id === "string" && body._id.startsWith("drafts.")) {
-      return NextResponse.json({ revalidated: false, message: `Skipped draft ${documentType}` });
+    if (typeof body?._id === "string" && body._id.startsWith("drafts.")) {
+      return NextResponse.json({ revalidated: false, message: `Skipped draft ${label}` });
     }
 
-    if (RENDERED_TYPES.has(documentType)) {
+    if (typeof documentType !== "string" || RENDERED_TYPES.has(documentType)) {
       expireAllRoutes();
+      expire(...PUBLISH_TAGS);
     } else {
       revalidatePath("/");
     }
-    expire(...PUBLISH_TAGS);
 
     return NextResponse.json({
       revalidated: true,
       now: Date.now(),
-      message: `Revalidated ${documentType}${slug ? ` (${slug})` : ""}`,
+      message: `Revalidated ${label}${slug ? ` (${slug})` : ""}`,
     });
   } catch (err) {
     console.error("Error revalidating:", err);
@@ -79,14 +81,19 @@ export async function POST(request: NextRequest) {
 // Optional: Add GET endpoint for manual testing
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("secret");
-  const path = request.nextUrl.searchParams.get("path") || "/";
+  const path = request.nextUrl.searchParams.get("path");
 
   if (!REVALIDATE_SECRET || token !== REVALIDATE_SECRET) {
     return NextResponse.json({ message: "Invalid token" }, { status: 401 });
   }
 
   try {
-    revalidatePath(path);
+    if (path) {
+      revalidatePath(path);
+    } else {
+      expireAllRoutes();
+      expire(...PUBLISH_TAGS);
+    }
     return NextResponse.json({
       revalidated: true,
       path,

@@ -4,9 +4,8 @@ import Link from "next/link";
 import { NavGlyph } from "@/components/retro/sprites";
 import { SiteHeader } from "@/components/site-header";
 import { SCORE_BANDS, scoreTone } from "@/lib/content/mappings";
-import { SITE_STATS_QUERY, fetchOptions } from "@/lib/content/queries";
+import { SITE_STATS_QUERY, cachedFetch } from "@/lib/content/queries";
 import type { SiteStats } from "@/lib/content/types";
-import { client } from "@/sanity/client";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lifemeetspixel.com";
 
@@ -38,8 +37,7 @@ const TONE_VAR: Record<ReturnType<typeof scoreTone>, string> = {
 };
 
 export default async function AboutPage() {
-  const stats = await client
-    .fetch<SiteStats>(SITE_STATS_QUERY, {}, fetchOptions)
+  const stats = await cachedFetch<SiteStats>(SITE_STATS_QUERY)
     .catch(() => null);
 
   return (

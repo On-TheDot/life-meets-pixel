@@ -3,15 +3,14 @@ import Link from "next/link";
 import { MarqueeWords } from "@/components/retro/arcade-art";
 import { ReviewCard } from "@/components/retro/review-card";
 import { getHeroFeatureId } from "@/lib/content/hero-pool";
-import { REVIEWS_QUERY, fetchOptions } from "@/lib/content/queries";
+import { REVIEWS_QUERY, cachedFetch } from "@/lib/content/queries";
 import type { Review } from "@/lib/content/types";
-import { client } from "@/sanity/client";
 
 const GRID_SIZE = 6;
 
 export default async function ReviewsSection() {
   const [reviews, heroFeatureId] = await Promise.all([
-    client.fetch<Review[]>(REVIEWS_QUERY, {}, fetchOptions),
+    cachedFetch<Review[]>(REVIEWS_QUERY),
     getHeroFeatureId(),
   ]);
 

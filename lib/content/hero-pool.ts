@@ -37,7 +37,7 @@ export async function getHeroPool(): Promise<HeroPool> {
   // and the cutoff is deliberately rounded to the day so the cache key is
   // stable for 24 hours rather than changing on every render.
   "use cache";
-  cacheLife("hours");
+  cacheLife("days");
   cacheTag(TAGS.reviews);
 
   const { recent, allTime } = await client.fetch<{

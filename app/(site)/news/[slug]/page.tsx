@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { relativeFromNow } from "@/lib/site/clock";
 import { PortableText, type PortableTextComponents } from "next-sanity";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,13 +13,14 @@ import { SiteHeader } from "@/components/site-header";
 import { breadcrumbSchema, graph, newsArticleSchema } from "@/lib/content/schema";
 import { authorInitial, authorLevel } from "@/lib/content/mappings";
 import {
-  fetchOptions,
+  cachedFetch,
   NEWS_POST_QUERY,
   NEWS_SLUGS_QUERY,
   RELATED_NEWS_QUERY,
   THIN_POST_WORDS,
 } from "@/lib/content/queries";
 import type { Category, NewsPost } from "@/lib/content/types";
+import { formatPublishDate } from "@/lib/site/clock";
 import { client } from "@/sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
@@ -43,7 +43,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: NewsPostPageProps): Promise<Metadata> {
-  const post = await client.fetch<NewsPost>(NEWS_POST_QUERY, await params, fetchOptions);
+  const post = await cachedFetch<NewsPost>(NEWS_POST_QUERY, await params);
   if (!post) {
     return { title: "News Post Not Found", description: "The requested news post could not be found." };
   }
@@ -180,18 +180,16 @@ function countWords(blocks: NewsPost["content"]): number {
 
 export default async function NewsPostPage({ params }: NewsPostPageProps) {
   const resolvedParams = await params;
-  const post = await client.fetch<NewsPost>(NEWS_POST_QUERY, resolvedParams, fetchOptions);
+  const post = await cachedFetch<NewsPost>(NEWS_POST_QUERY, resolvedParams);
 
   if (!post) notFound();
 
-  const related = await client.fetch<NewsPost[]>(
+  const related = await cachedFetch<NewsPost[]>(
     RELATED_NEWS_QUERY,
     { slug: resolvedParams.slug },
-    fetchOptions,
   );
 
   const publishDate = new Date(post.publishedAt);
-  const relativeDate = await relativeFromNow(post.publishedAt);
   const imageUrl = post.featuredImage?.asset?.url ?? null;
   const wordCount = countWords(post.content);
   const readMin = Math.max(1, Math.round(wordCount / 220));
@@ -256,7 +254,7 @@ export default async function NewsPostPage({ params }: NewsPostPageProps) {
                 <time
                   dateTime={post.publishedAt}
                 >
-                  {relativeDate}
+                  {formatPublishDate(post.publishedAt)}
                 </time>
               </div>
             </div>

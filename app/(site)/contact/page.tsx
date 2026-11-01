@@ -6,9 +6,8 @@ import { SocialTiles } from "@/components/sections/social-section";
 import { SiteHeader } from "@/components/site-header";
 import { SITE_CONFIG, OG_IMAGE } from "@/lib/site/constants";
 import { authorAccent, authorInitial, authorLevel } from "@/lib/content/mappings";
-import { ALL_AUTHORS_QUERY, fetchOptions } from "@/lib/content/queries";
+import { ALL_AUTHORS_QUERY, cachedFetch } from "@/lib/content/queries";
 import type { Author } from "@/lib/content/types";
-import { client } from "@/sanity/client";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lifemeetspixel.com";
 
@@ -30,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ContactPage() {
-  const authors = await client.fetch<Author[]>(ALL_AUTHORS_QUERY, {}, fetchOptions);
+  const authors = await cachedFetch<Author[]>(ALL_AUTHORS_QUERY);
 
   return (
     <>

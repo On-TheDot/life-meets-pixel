@@ -1,8 +1,7 @@
 import { toHTML, type PortableTextComponents } from "@portabletext/to-html";
 
 import { rssFeedsEnabled, userHasPaidSubscription, userIdForRssToken } from "@/lib/members/rss";
-import { fetchOptions } from "@/lib/content/queries";
-import { client } from "@/sanity/client";
+import { cachedFetch } from "@/lib/content/queries";
 
 type PortableText = Parameters<typeof toHTML>[0];
 
@@ -94,8 +93,8 @@ export async function GET(
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lifemeetspixel.com";
   const [reviews, news] = await Promise.all([
-    client.fetch<FullReview[]>(FULL_REVIEWS_QUERY, {}, fetchOptions),
-    client.fetch<FullNews[]>(FULL_NEWS_QUERY, {}, fetchOptions),
+    cachedFetch<FullReview[]>(FULL_REVIEWS_QUERY),
+    cachedFetch<FullNews[]>(FULL_NEWS_QUERY),
   ]);
 
   const items = [
