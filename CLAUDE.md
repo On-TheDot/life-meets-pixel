@@ -1,20 +1,20 @@
-# Life Meets Pixel — Claude Context
+# Life Meets Pixel
 
-Public-facing geek-culture review site (games, movies, books, anime, board games, tech). Next.js 15 (App Router) + React 19 + Sanity CMS. Retro-gaming aesthetic — Press Start 2P / JetBrains Mono / VT323 fonts with Fraunces for prose, 3 switchable palettes (midnight, amber, candy as the light mode), scanline overlay, CRT hero frame, HP-bar score breakdown. Deployed on Vercel.
+Public-facing geek-culture review site (games, movies, books, anime, board games, tech). Next.js 15 (App Router) + React 19 + Sanity CMS. Retro-gaming aesthetic: Press Start 2P / JetBrains Mono / VT323 fonts with Fraunces for prose, 3 switchable palettes (midnight, amber, candy as the light mode), scanline overlay, CRT hero frame, HP-bar score breakdown. Deployed on Vercel.
 
 ## Read this first
 
 Durable project knowledge lives in the Obsidian vault at `~/Documents/ObsidianVault`, organised under the wiki schema. Start at the entry-point pages and follow `[[wikilinks]]`:
 
-- [`wiki/entities/life-meets-pixel.md`](/home/michael_pappas/Documents/ObsidianVault/wiki/entities/life-meets-pixel.md): project entry point, links to everything else.
-- [`wiki/concepts/life-meets-pixel-architecture.md`](/home/michael_pappas/Documents/ObsidianVault/wiki/concepts/life-meets-pixel-architecture.md), `life-meets-pixel-sanity-schema.md`, `life-meets-pixel-affiliate-integration.md`: topic-specific concepts.
-- [`wiki/synthesis/life-meets-pixel-decisions.md`](/home/michael_pappas/Documents/ObsidianVault/wiki/synthesis/life-meets-pixel-decisions.md), `life-meets-pixel-backlog.md`, `life-meets-pixel-redesign-plan.md`: decision log, open work, redesign history.
-- [`wiki/entities/life-meets-pixel-stack.md`](/home/michael_pappas/Documents/ObsidianVault/wiki/entities/life-meets-pixel-stack.md): versions + env vars.
+- [`wiki/entities/life-meets-pixel.md`](~/Documents/ObsidianVault/wiki/entities/life-meets-pixel.md): project entry point, links to everything else.
+- [`wiki/concepts/life-meets-pixel-architecture.md`](~/Documents/ObsidianVault/wiki/concepts/life-meets-pixel-architecture.md), `life-meets-pixel-sanity-schema.md`, `life-meets-pixel-affiliate-integration.md`: topic-specific concepts.
+- [`wiki/synthesis/life-meets-pixel-decisions.md`](~/Documents/ObsidianVault/wiki/synthesis/life-meets-pixel-decisions.md), `life-meets-pixel-backlog.md`, `life-meets-pixel-redesign-plan.md`: decision log, open work, redesign history.
+- [`wiki/entities/life-meets-pixel-stack.md`](~/Documents/ObsidianVault/wiki/entities/life-meets-pixel-stack.md): versions + env vars.
 
 Cross-project conventions:
-- [`wiki/concepts/nextjs-patterns.md`](/home/michael_pappas/Documents/ObsidianVault/wiki/concepts/nextjs-patterns.md): App Router patterns (note: this repo invalidates from the Sanity webhook, not from `after()` in server actions).
+- [`wiki/concepts/nextjs-patterns.md`](~/Documents/ObsidianVault/wiki/concepts/nextjs-patterns.md): App Router patterns (note: this repo invalidates from the Sanity webhook, not from `after()` in server actions).
 
-The vault's operating manual is at [`WIKI-SCHEMA.md`](/home/michael_pappas/Documents/ObsidianVault/WIKI-SCHEMA.md). Master catalogue at [`wiki/index.md`](/home/michael_pappas/Documents/ObsidianVault/wiki/index.md).
+The vault's operating manual is at [`WIKI-SCHEMA.md`](~/Documents/ObsidianVault/WIKI-SCHEMA.md). Master catalogue at [`wiki/index.md`](~/Documents/ObsidianVault/wiki/index.md).
 
 ## Write back to the vault
 
@@ -23,157 +23,21 @@ Any decision, convention, performance finding, or gotcha discovered during a ses
 ## Non-negotiable rules
 
 - **All GROQ lives in `lib/content/queries.ts`.** Don't inline GROQ in components/pages (sitemap + one-off scripts excepted).
-- **`components/retro/review-card.tsx` renders all 8 item types.** Don't fork per-type cards — extend `lib/content/mappings.ts` + `components/retro/sprites.tsx`.
+- **`components/retro/review-card.tsx` renders all 8 item types.** Don't fork per-type cards: extend `lib/content/mappings.ts` + `components/retro/sprites.tsx`.
 - **`/api/revalidate` is gated on `REVALIDATE_SECRET`.** If you add a Sanity `_type` that renders on the site, add it to `RENDERED_TYPES` in `app/api/revalidate/route.ts`, or its edits only refresh the homepage until the 1h fetch window lapses.
 - **Every affiliate surface links to `/legal/affiliate-disclosure`.** FTC + ACL requirement.
 - **Studio (`studio/`) is React 18 + Sanity 3.99.** Frontend is React 19. Don't try to unify.
 - **The webhook expires everything, on purpose.** A published mutation calls `revalidatePath("/", "layout")` plus `revalidateTag` for every tag in `lib/content/cache-tags.ts`. Never add per-page typed calls like `revalidatePath("/reviews", "page")`: a typed path has to include route groups (`/(site)/reviews/(listing)`), and a path without them silently matches nothing.
+- **A text-only draft is not a deliverable.** Use the `article-media` skill for any `newsPost` or `review`.
+- **Never put a hashtag in a caption, and a carousel or reel goes to Telegram for review before it counts as done.** Use the `social-copy` skill. Posting still needs Michael's explicit go for that item.
 
-## Article media, non-negotiable
+## Pointers
 
-**A text-only draft is not a deliverable.** Never hand over a `newsPost` or `review` draft without all three:
-
-1. **Featured image** — real promo art, press-kit still, key art or Steam capsule. Download it and actually *look* at it (`Read` the file) before attaching. Outlet `og:image` tags are sometimes memes or collages.
-2. **At least 2 inline body images**, spread through the sections, each with a required `alt` *and* a `caption` crediting the source ("Screenshot via Steam / BioWare", "Still via Sony Pictures").
-3. **A `videoEmbed` of the official trailer** under a closing `h2` ("Watch the trailer"), whenever one exists.
-
-**Verify the video's channel before embedding.** `curl -sL "https://www.youtube.com/watch?v=<id>" | grep -oE '"author":"[^"]*"'` and confirm it is the studio/publisher's own account. Fan reuploads and outlet reuploads (IGN, Entertainment Tonight) don't go on the site.
-
-**No AI-generated images, ever.** Real existing art only.
-
-**Never reuse an image across articles**, and **the photo must depict what its section is actually about**. A Spider-Man still under a heading called "The X-Men question" is not acceptable, however well the body text connects them: find Cyclops, a Sentinel, the mutant teaser. Same per carousel slide, four content slides need four distinct on-topic images, not two alternating. Reject anything with another outlet's watermark burned in (io9/Gizmodo badges, IGN bugs). Check `file <img>` for embedded EXIF, press stills often carry a "Photo courtesy of Marvel" description that confirms provenance.
-
-Useful sources: the primary source article's `og:image`; publisher newsrooms (`cdn.marvel.com`, `blog.playstation.com`); Steam official screenshots via `https://store.steampowered.com/api/appdetails?appids=<id>`; Steam art at `https://cdn.cloudflare.steamstatic.com/steam/apps/<id>/library_hero.jpg`.
-
-Upload with `@sanity/client` `assets.upload('image', stream, {filename})`, then patch `featuredImage` / splice the image block into `content`.
-
-## Social copy: keywords, never hashtags
-
-**Never put a hashtag in a caption. Not one, on any platform.** Instagram ranks captions on search keywords now, so a hashtag block does nothing but read as spam. Instead work the searchable terms into natural sentences and front-load the strongest keyword phrase in the first line:
-
-- Bad: `Marvel dropped the slate. #LifeMeetsPixel #Marvel #MCU #ComicCon`
-- Good: `The Avengers: Doomsday slate after San Diego Comic-Con 2026 is four Marvel movies in three years.`
-
-Searchable terms worth weaving in: title, studio/publisher, platform, genre, year, event name. This applies to the `igCaption` and `fbMessage` in `lib/pipeline/social.ts`, and to the social pack in `.claude/commands/draft-news.md` and `draft-review.md`. Keep all four in sync.
-
-The CTA in an Instagram caption is always "link in bio". Never a raw URL (not clickable, and IG demotes it). Facebook links are clickable, so the full URL goes there.
-
-## Social assets
-
-Any carousel or reel is **rendered and sent to Telegram for review** before it counts as done. Don't describe it, don't leave PNGs in a scratchpad. Render the real slides through `/social-template` (the same route the pipeline screenshots) so what Michael approves is what ships, then `sendMediaGroup` to the bot. Posting to Instagram/Facebook still needs his explicit go for that specific item.
-
-## Browser automation
-
-Use **`npx -y chrome-devtools-axi`** ([axi.md](https://axi.md), MIT) for every browser task: screenshots, DOM and a11y inspection, console, network, Lighthouse, perf traces. It wraps `chrome-devtools-mcp` but returns an accessibility tree with `uid` handles rather than an image, so structure and interaction work costs a fraction of the tokens, and a screenshot through a warm bridge is ~0.9s against ~5s for a cold headless launch.
-
-**Chrome will not launch itself on this machine.** The MCP tools and a bare `axi open` both die with `Protocol error (Target.setDiscoverTargets): Target closed`. Run Chrome yourself and attach:
-
-```bash
-CH=~/.cache/puppeteer/chrome/linux-150.0.7871.24/chrome-linux64/chrome
-nohup "$CH" --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage \
-  --remote-debugging-port=9222 --user-data-dir=/tmp/axi-profile about:blank &
-export CHROME_DEVTOOLS_AXI_BROWSER_URL="http://127.0.0.1:9222"
-npx -y chrome-devtools-axi stop && npx -y chrome-devtools-axi start
-npx -y chrome-devtools-axi open http://localhost:3000/
-```
-
-A **stale bridge fails fast**: a `Target closed` error returning in ~2s means the bridge is holding a dead connection, so `stop` then `start` before concluding anything is actually broken. Never put `pkill` in the same compound command as the relaunch; it kills the calling shell.
-
-## Sanity MCP
-
-Register the hosted Sanity MCP server once per machine (OAuth — no token needed):
-
-```
-claude mcp add Sanity -t http https://mcp.sanity.io --scope user
-```
-
-After first use it'll prompt an OAuth browser flow. Use the MCP for schema introspection, data queries, and content patches — faster than maintaining one-off scripts in `scripts/`. The `SANITY_API_TOKEN` in `.env.local` is still needed for the local seed/delete scripts, but **not** for the MCP.
-
-## Env vars (`.env.local`)
-
-```
-# Sanity
-NEXT_PUBLIC_SANITY_PROJECT_ID=1ir3sv5r
-NEXT_PUBLIC_SANITY_DATASET=production
-NEXT_PUBLIC_SANITY_API_VERSION=2024-01-01
-SANITY_API_TOKEN=sk_...              # Editor/Admin — seed scripts, delete-alex, MCP
-
-# Site
-NEXT_PUBLIC_SITE_URL=https://lifemeetspixel.com
-REVALIDATE_SECRET=...                # gates /api/revalidate webhook
-
-# Clerk (membership: auth + billing — optional; without keys the site runs
-# with membership disabled and no auth UI renders)
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
-CLERK_SECRET_KEY=sk_...
-CLERK_WEBHOOK_SIGNING_SECRET=whsec_...  # gates /api/clerk; without it that route 404s
-                                        # Clerk dashboard > Webhooks > Add Endpoint
-                                        # https://lifemeetspixel.com/api/clerk
-                                        # events: user.created, user.deleted,
-                                        # subscriptionItem.active/.canceled/.pastDue/
-                                        # .freeTrialEnding  → pings Telegram
-
-# Google AdSense (optional — without these no ad slots render; ad_free members
-# never load the AdSense script at all)
-NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-...
-NEXT_PUBLIC_ADSENSE_SLOT=...         # a responsive display unit's slot id
-
-# Comments + member RSS (optional — Neon Postgres; without it those features hide)
-DATABASE_URL=postgres://...          # Neon connection string
-# Admin access (all member features comped + delete any comment): set the Clerk
-# user's PUBLIC metadata to {"role": "admin"} in the Clerk dashboard (per instance)
-
-# Resend (contact form)
-RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL="Life Meets Pixel <noreply@onthedot.dev>"
-CONTACT_TO_EMAIL=michael@lifemeetspixel.com   # optional
-
-# Telegram approval bot (content pipeline)
-TELEGRAM_BOT_TOKEN=...               # from @BotFather
-TELEGRAM_CHAT_ID=...                 # pnpm telegram:setup -- --updates
-TELEGRAM_WEBHOOK_SECRET=...          # openssl rand -hex 24; gates /api/telegram
-
-# Radar cron (content pipeline)
-CRON_SECRET=...                      # openssl rand -hex 24; gates /api/radar, /api/draft, /api/social
-ANTHROPIC_API_KEY=sk-ant-...         # radar ranking + drafting agent + social copy
-
-# Meta / Instagram + Facebook posting (optional — without these, /api/social
-# delivers the rendered template + captions to Telegram for manual posting)
-META_PAGE_ID=...                     # Facebook Page ID
-META_IG_USER_ID=...                  # Instagram business account ID linked to the Page
-META_PAGE_ACCESS_TOKEN=...           # long-lived Page token: pages_manage_posts + instagram_content_publish
-
-# Analytics (optional)
-NEXT_PUBLIC_GA_MEASUREMENT_ID=G-...
-NEXT_PUBLIC_GOOGLE_ADS_ID=AW-...
-```
-
-## Commands
-
-```bash
-# Frontend (pnpm — this is a pnpm workspace, not npm)
-pnpm dev                # Next dev server
-pnpm build              # runs `vitest run` first; a failing test fails the Vercel build
-pnpm start
-pnpm lint               # not part of the build; run it locally before push
-pnpm test               # Vitest unit tests (*.test.ts next to the code they test)
-pnpm test:e2e           # Playwright: admin access with real Clerk dev-instance test users, and layout
-                        # rules at 390/820/1440px, on a fresh production build (E2E_BASE_URL=http://localhost:3000
-                        # reuses the dev server instead). Dev-instance keys only; never part of the Vercel build
-
-# Sanity Studio
-pnpm studio             # http://localhost:3333
-pnpm studio:build
-pnpm studio:deploy
-
-# Data scripts (needs SANITY_API_TOKEN in .env.local)
-pnpm seed:dry-run
-pnpm seed
-pnpm delete:alex:dry-run
-pnpm delete:alex        # add --force to also delete referencing docs
-```
-
-<!-- BEGIN:nextjs-agent-rules -->
+- Browser work: the `browser-automation` skill.
+- Sanity MCP, env vars and every command: [`docs/setup.md`](docs/setup.md).
+- This is a pnpm workspace, and `pnpm build` runs the tests first, so a failing test fails the Vercel build.
+- `pnpm lint` isn't part of the build, so run it before a push.
+- `pnpm test:e2e` uses dev-instance Clerk keys only and is never part of the Vercel build.
 
 # This is NOT the Next.js you know
 
