@@ -11,8 +11,9 @@ import { PUBLISH_TAGS } from '@/lib/content/cache-tags';
 const REVALIDATE_SECRET = process.env.REVALIDATE_SECRET;
 
 /**
- * Sanity document types that render on the public site. A published mutation
- * to one of them expires every route; any other type expires the homepage.
+ * Sanity document types that render on the public site. A mutation to one of
+ * them, or a payload with no `_type`, expires every route and `PUBLISH_TAGS`.
+ * Any other type expires the homepage.
  */
 const RENDERED_TYPES = new Set([
   "review",
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ revalidated: false, message: `Skipped draft ${documentType}` });
     }
 
-    if (RENDERED_TYPES.has(documentType)) {
+    if (typeof documentType !== "string" || RENDERED_TYPES.has(documentType)) {
       expireAllRoutes();
       expire(...PUBLISH_TAGS);
     } else {

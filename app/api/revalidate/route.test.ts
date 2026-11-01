@@ -94,6 +94,16 @@ describe("/api/revalidate", () => {
     expect(cache.revalidateTag).not.toHaveBeenCalled();
   });
 
+  it.each([[{ _id: "abc" }], [{ _id: "abc", _type: null }]])(
+    "expires everything when a delete payload %j names no type",
+    async (body) => {
+      const { POST } = await loadRoute();
+      await POST(webhook(body));
+      expect(expiredEveryRoute()).toBe(true);
+      expect(tags()).toEqual(PUBLISH_TAGS);
+    },
+  );
+
   it("keeps every cached lifetime at a day or longer", () => {
     const shortLived = /cacheLife\(\s*["'](default|seconds|minutes|hours)["']|next:\s*\{\s*revalidate/;
     const offenders = sourceFiles().filter((f) => shortLived.test(readFileSync(join(ROOT_DIR, f), "utf8")));
