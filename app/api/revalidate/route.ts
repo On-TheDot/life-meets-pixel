@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       revalidated: true,
       now: Date.now(),
-      message: `Revalidated ${documentType}${slug ? ` (${slug})` : ""}`,
+      message: `Revalidated ${documentType ?? "untyped document"}${slug ? ` (${slug})` : ""}`,
     });
   } catch (err) {
     console.error("Error revalidating:", err);
@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
 
   try {
     revalidatePath(path);
+    expire(...PUBLISH_TAGS);
     return NextResponse.json({
       revalidated: true,
       path,

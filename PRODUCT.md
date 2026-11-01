@@ -30,7 +30,7 @@ This is the claim the owner would defend hardest, and it is the one a neighbouri
 
 - **Reader:** arrives from search or social onto a single article, usually on mobile. Reads, may bounce sideways into an adjacent article or medium, may return later for the taste rather than the title.
 - **Author/owner:** Michael, a programmer and lifelong gamer in Sydney. Writes and publishes through Sanity Studio; drafts are researched and assembled with a semi-automated pipeline (news radar → draft → Telegram approval → publish → social).
-- **Publishing loop:** Sanity document edit → webhook → `revalidatePath`, so published edits surface on the live site within seconds. Content is authored once and rendered across the site, RSS, and social templates.
+- **Publishing loop:** Sanity document edit → webhook → `revalidatePath` plus `revalidateTag`, so published edits surface on the live site within seconds. Content is authored once and rendered across the site, RSS, and social templates.
 - **Social:** Instagram and Facebook carousels/reels rendered from an in-repo template route and reviewed before posting. Captions are keyword-led prose, never hashtag blocks.
 - **Editorial rituals that are product facts, not preferences:** corrections are made visibly with a note on what changed rather than silently edited; where an article builds on another outlet's reporting, that outlet is linked in the text; every article links to its author's page.
 
@@ -53,11 +53,11 @@ This is the claim the owner would defend hardest, and it is the one a neighbouri
 
 **Technical constraints**
 
-- Next.js 15 App Router + React 19; Sanity Studio is a separate React 18 workspace and is not to be unified with the frontend.
+- Next.js 16 App Router + React 19; Sanity Studio is a separate React 18 workspace and is not to be unified with the frontend.
 - All GROQ lives in `lib/content/queries.ts`. One card component renders all eight item types; per-type forks are prohibited — extend `lib/content/mappings.ts` and `components/retro/sprites.tsx` instead.
-- Cache invalidation is webhook-driven `revalidatePath`, not tag-based. A new Sanity `_type` requires updating the switch in `app/api/revalidate/route.ts`.
+- Freshness comes from the Sanity webhook, which calls `revalidatePath` and `revalidateTag`. Timers are only a 30-day fallback. A new Sanity `_type` must be added to `RENDERED_TYPES` in `app/api/revalidate/route.ts`.
 - Every optional integration degrades to *absent*, not broken: without Clerk keys, membership is disabled and no auth UI renders; without AdSense keys, no ad slots render; without `DATABASE_URL`, comments and member RSS hide. Designs must hold up in the degraded state.
-- pnpm workspace. Vercel build is the only CI gate; there are no automated tests.
+- pnpm workspace. Vercel build is the only CI gate, and it runs the Vitest suite first.
 
 **Explicitly undecided**
 

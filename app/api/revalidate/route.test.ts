@@ -104,8 +104,15 @@ describe("/api/revalidate", () => {
     },
   );
 
-  it("keeps every cached lifetime at a day or longer", () => {
-    const shortLived = /cacheLife\(\s*["'](default|seconds|minutes|hours)["']|next:\s*\{\s*revalidate/;
+  it("expires the tags on a manual refresh, the recovery for a missed webhook", async () => {
+    const { GET } = await loadRoute();
+    await GET(new NextRequest("https://lifemeetspixel.com/api/revalidate?secret=right&path=/news"));
+    expect(cache.revalidatePath).toHaveBeenCalledWith("/news");
+    expect(tags()).toEqual(PUBLISH_TAGS);
+  });
+
+  it("allows only the days and max cacheLife profiles and no fetch timer", () => {
+    const shortLived = /cacheLife\((?!\s*["'](days|max)["'])|next:\s*\{\s*revalidate/;
     const offenders = sourceFiles().filter((f) => shortLived.test(readFileSync(join(ROOT_DIR, f), "utf8")));
     expect(offenders).toEqual([]);
   });

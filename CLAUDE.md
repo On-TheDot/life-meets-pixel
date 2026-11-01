@@ -1,6 +1,6 @@
 # Life Meets Pixel
 
-Public-facing geek-culture review site (games, movies, books, anime, board games, tech). Next.js 15 (App Router) + React 19 + Sanity CMS. Retro-gaming aesthetic: Press Start 2P / JetBrains Mono / VT323 fonts with Fraunces for prose, 3 switchable palettes (midnight, amber, candy as the light mode), scanline overlay, CRT hero frame, HP-bar score breakdown. Deployed on Vercel.
+Public-facing geek-culture review site (games, movies, books, anime, board games, tech). Next.js 16 (App Router) + React 19 + Sanity CMS. Retro-gaming aesthetic: Press Start 2P / JetBrains Mono / VT323 fonts with Fraunces for prose, 3 switchable palettes (midnight, amber, candy as the light mode), scanline overlay, CRT hero frame, HP-bar score breakdown. Deployed on Vercel.
 
 ## Read this first
 
