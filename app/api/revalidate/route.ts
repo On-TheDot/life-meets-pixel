@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const documentType = body?._type;
-    const label = documentType ?? "untyped document";
+    const label = typeof documentType === "string" ? documentType : "untyped document";
     const slug = body?.slug?.current;
 
     if (typeof body?._id === "string" && body._id.startsWith("drafts.")) {
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
     }
     return NextResponse.json({
       revalidated: true,
-      path: path ?? "every route",
+      path,
       now: Date.now(),
     });
   } catch (err) {

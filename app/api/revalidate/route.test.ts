@@ -124,6 +124,12 @@ describe("/api/revalidate", () => {
     expect((await res.json()).message).toBe("Skipped draft untyped document");
   });
 
+  it("names a non-string type as untyped in its response", async () => {
+    const { POST } = await loadRoute();
+    const res = await POST(webhook({ _id: "drafts.abc", _type: { x: 1 } }));
+    expect((await res.json()).message).toBe("Skipped draft untyped document");
+  });
+
   it("expires everything when the payload is JSON null", async () => {
     const { POST } = await loadRoute();
     expect((await POST(webhook("null"))).status).toBe(200);
