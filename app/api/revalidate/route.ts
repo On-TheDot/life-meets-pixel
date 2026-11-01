@@ -92,8 +92,8 @@ export async function GET(request: NextRequest) {
       revalidatePath(path);
     } else {
       expireAllRoutes();
+      expire(...PUBLISH_TAGS);
     }
-    expire(...PUBLISH_TAGS);
     return NextResponse.json({
       revalidated: true,
       path: path ?? "every route",

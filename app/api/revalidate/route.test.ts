@@ -104,11 +104,11 @@ describe("/api/revalidate", () => {
     },
   );
 
-  it("expires the tags on a manual refresh, the recovery for a missed webhook", async () => {
+  it("refreshes only the named path, leaving other pages' tags alone", async () => {
     const { GET } = await loadRoute();
     await GET(new NextRequest("https://lifemeetspixel.com/api/revalidate?secret=right&path=/news"));
     expect(cache.revalidatePath).toHaveBeenCalledWith("/news");
-    expect(tags()).toEqual(PUBLISH_TAGS);
+    expect(cache.revalidateTag).not.toHaveBeenCalled();
   });
 
   it("expires every route on a manual refresh with no path", async () => {
