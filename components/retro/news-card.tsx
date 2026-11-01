@@ -1,9 +1,9 @@
-import { format } from "date-fns";
 import Image from "next/image";
 import Link from "next/link";
 
 import { paletteAccent } from "@/lib/content/mappings";
 import type { NewsPost } from "@/lib/content/types";
+import { formatPublishDate } from "@/lib/site/clock";
 
 export function NewsCard({
   post,
@@ -15,12 +15,7 @@ export function NewsCard({
   /** Skip lazy-loading for above-the-fold cards on the listing. */
   priority?: boolean;
 }) {
-  // "d MMM yyyy", not "M/d/yyyy". This is an en-AU site — the numeric US form
-  // rendered 5 August as "8/5/2026", which an Australian reader reads as
-  // 8 May. A named month is unambiguous in both conventions.
-  const date = post.publishedAt
-    ? format(new Date(post.publishedAt), "d MMM yyyy")
-    : "";
+  const date = post.publishedAt ? formatPublishDate(post.publishedAt) : "";
   const category = post.categories?.[0];
   return (
     <Link

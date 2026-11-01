@@ -8,7 +8,6 @@ import AdBreak from "@/components/ads/ad-break";
 import Comments from "@/components/comments/comments";
 import { AuthorChip } from "@/components/retro/author-chip";
 import { NewsCard } from "@/components/retro/news-card";
-import { RelativeDate } from "@/components/retro/relative-date";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SiteHeader } from "@/components/site-header";
 import { breadcrumbSchema, graph, newsArticleSchema } from "@/lib/content/schema";
@@ -21,6 +20,7 @@ import {
   THIN_POST_WORDS,
 } from "@/lib/content/queries";
 import type { Category, NewsPost } from "@/lib/content/types";
+import { formatPublishDate } from "@/lib/site/clock";
 import { client } from "@/sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
@@ -254,7 +254,7 @@ export default async function NewsPostPage({ params }: NewsPostPageProps) {
                 <time
                   dateTime={post.publishedAt}
                 >
-                  <RelativeDate iso={post.publishedAt} />
+                  {formatPublishDate(post.publishedAt)}
                 </time>
               </div>
             </div>

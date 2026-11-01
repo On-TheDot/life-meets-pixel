@@ -3,11 +3,11 @@ import Link from "next/link";
 
 import { itemTypeToCat } from "@/lib/content/mappings";
 import type { Review } from "@/lib/content/types";
+import { formatPublishDate } from "@/lib/site/clock";
 
 import { AuthorChip } from "./author-chip";
 import { CatBadge } from "./cat-badge";
 import { HeartRow } from "./heart-row";
-import { RelativeDate } from "./relative-date";
 import { ScoreBox } from "./score-box";
 
 export function ReviewCard({
@@ -20,6 +20,7 @@ export function ReviewCard({
   const item = review.reviewableItem;
   const cat = itemTypeToCat(item.itemType);
   const studio = item.publisher || item.creator || "";
+  const date = review.publishedAt ? formatPublishDate(review.publishedAt) : "";
 
   return (
     <Link
@@ -42,9 +43,7 @@ export function ReviewCard({
         <ScoreBox score={review.reviewScore} />
       </div>
       <div className="review-card__body">
-        <div className="review-card__date">
-          {review.publishedAt && <RelativeDate iso={review.publishedAt} />}
-        </div>
+        <div className="review-card__date">{date}</div>
         <h3 className="review-card__title">{review.title}</h3>
         <div className="review-card__subject">
           {item.title}

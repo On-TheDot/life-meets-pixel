@@ -9,7 +9,6 @@ import Comments from "@/components/comments/comments";
 import { AuthorChip } from "@/components/retro/author-chip";
 import { CatBadge } from "@/components/retro/cat-badge";
 import { HeartRow } from "@/components/retro/heart-row";
-import { RelativeDate } from "@/components/retro/relative-date";
 import { HPBar } from "@/components/retro/hp-bar";
 import { ReviewCard } from "@/components/retro/review-card";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -33,6 +32,7 @@ import {
   REVIEW_SLUGS_QUERY,
 } from "@/lib/content/queries";
 import type { Category, Genre, Platform, Review, Tag } from "@/lib/content/types";
+import { formatPublishDate } from "@/lib/site/clock";
 import type { PortableTextBlock } from "@portabletext/types";
 import { client } from "@/sanity/client";
 import imageUrlBuilder from "@sanity/image-url";
@@ -405,7 +405,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ slug: s
                 <time
                   dateTime={review.publishedAt}
                 >
-                  <RelativeDate iso={review.publishedAt} />
+                  {formatPublishDate(review.publishedAt)}
                 </time>
               </div>
               {review.tags && review.tags.length > 0 && (
