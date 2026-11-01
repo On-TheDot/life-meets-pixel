@@ -136,8 +136,8 @@ describe("/api/revalidate", () => {
     expect(expiredEveryRoute()).toBe(true);
   });
 
-  it("allows only day-or-longer cacheLife profiles and no fetch timer", () => {
-    const shortLived = /cacheLife\((?!\s*["'](days|weeks|max)["'])|next:\s*\{\s*revalidate/;
+  it("allows only the days and max cacheLife profiles and no fetch timer", () => {
+    const shortLived = /cacheLife\((?!\s*["'](days|max)["'])|next:\s*\{\s*revalidate/;
     const offenders = sourceFiles().filter((f) => shortLived.test(readFileSync(join(ROOT_DIR, f), "utf8")));
     expect(offenders).toEqual([]);
   });
