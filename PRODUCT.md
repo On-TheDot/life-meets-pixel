@@ -55,7 +55,7 @@ This is the claim the owner would defend hardest, and it is the one a neighbouri
 
 - Next.js 16 App Router + React 19; Sanity Studio is a separate React 18 workspace and is not to be unified with the frontend.
 - All GROQ lives in `lib/content/queries.ts`. One card component renders all eight item types; per-type forks are prohibited — extend `lib/content/mappings.ts` and `components/retro/sprites.tsx` instead.
-- Freshness comes from the Sanity webhook, which calls `revalidatePath` and `revalidateTag`. Timers are only a 30-day fallback. A new Sanity `_type` must be added to `RENDERED_TYPES` in `app/api/revalidate/route.ts`.
+- Freshness comes from the Sanity webhook, which calls `revalidatePath` and `revalidateTag`. Timers are only a fallback, 30 days for content and 1 day for the homepage hero. A new Sanity `_type` must be added to `RENDERED_TYPES` in `app/api/revalidate/route.ts`.
 - Every optional integration degrades to *absent*, not broken: without Clerk keys, membership is disabled and no auth UI renders; without AdSense keys, no ad slots render; without `DATABASE_URL`, comments and member RSS hide. Designs must hold up in the degraded state.
 - pnpm workspace. Vercel build is the only CI gate, and it runs the Vitest suite first.
 

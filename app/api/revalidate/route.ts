@@ -49,11 +49,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const documentType = body._type;
-    const slug = body.slug?.current;
+    const documentType = body?._type;
+    const label = documentType ?? "untyped document";
+    const slug = body?.slug?.current;
 
-    if (typeof body._id === "string" && body._id.startsWith("drafts.")) {
-      return NextResponse.json({ revalidated: false, message: `Skipped draft ${documentType}` });
+    if (typeof body?._id === "string" && body._id.startsWith("drafts.")) {
+      return NextResponse.json({ revalidated: false, message: `Skipped draft ${label}` });
     }
 
     if (typeof documentType !== "string" || RENDERED_TYPES.has(documentType)) {
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       revalidated: true,
       now: Date.now(),
-      message: `Revalidated ${documentType ?? "untyped document"}${slug ? ` (${slug})` : ""}`,
+      message: `Revalidated ${label}${slug ? ` (${slug})` : ""}`,
     });
   } catch (err) {
     console.error("Error revalidating:", err);
@@ -80,18 +81,22 @@ export async function POST(request: NextRequest) {
 // Optional: Add GET endpoint for manual testing
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("secret");
-  const path = request.nextUrl.searchParams.get("path") || "/";
+  const path = request.nextUrl.searchParams.get("path");
 
   if (!REVALIDATE_SECRET || token !== REVALIDATE_SECRET) {
     return NextResponse.json({ message: "Invalid token" }, { status: 401 });
   }
 
   try {
-    revalidatePath(path);
+    if (path) {
+      revalidatePath(path);
+    } else {
+      expireAllRoutes();
+    }
     expire(...PUBLISH_TAGS);
     return NextResponse.json({
       revalidated: true,
-      path,
+      path: path ?? "every route",
       now: Date.now(),
     });
   } catch (err) {

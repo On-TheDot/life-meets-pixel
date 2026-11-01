@@ -31,7 +31,7 @@ function studioDocumentTypes(): string[] {
 function sourceFiles(): string[] {
   return ["app", "components", "lib"].flatMap((dir) =>
     readdirSync(join(ROOT_DIR, dir), { recursive: true, encoding: "utf8" })
-      .filter((f) => /\.tsx?$/.test(f) && !f.endsWith(".test.ts"))
+      .filter((f) => /\.tsx?$/.test(f) && !/\.test\.tsx?$/.test(f))
       .map((f) => join(dir, f)),
   );
 }
@@ -111,8 +111,27 @@ describe("/api/revalidate", () => {
     expect(tags()).toEqual(PUBLISH_TAGS);
   });
 
-  it("allows only the days and max cacheLife profiles and no fetch timer", () => {
-    const shortLived = /cacheLife\((?!\s*["'](days|max)["'])|next:\s*\{\s*revalidate/;
+  it("expires every route on a manual refresh with no path", async () => {
+    const { GET } = await loadRoute();
+    await GET(new NextRequest("https://lifemeetspixel.com/api/revalidate?secret=right"));
+    expect(expiredEveryRoute()).toBe(true);
+    expect(tags()).toEqual(PUBLISH_TAGS);
+  });
+
+  it("names an untyped draft in its response", async () => {
+    const { POST } = await loadRoute();
+    const res = await POST(webhook({ _id: "drafts.abc" }));
+    expect((await res.json()).message).toBe("Skipped draft untyped document");
+  });
+
+  it("expires everything when the payload is JSON null", async () => {
+    const { POST } = await loadRoute();
+    expect((await POST(webhook("null"))).status).toBe(200);
+    expect(expiredEveryRoute()).toBe(true);
+  });
+
+  it("allows only day-or-longer cacheLife profiles and no fetch timer", () => {
+    const shortLived = /cacheLife\((?!\s*["'](days|weeks|max)["'])|next:\s*\{\s*revalidate/;
     const offenders = sourceFiles().filter((f) => shortLived.test(readFileSync(join(ROOT_DIR, f), "utf8")));
     expect(offenders).toEqual([]);
   });
